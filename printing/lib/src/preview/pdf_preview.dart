@@ -49,6 +49,7 @@ class PdfPreview extends StatefulWidget {
     this.onPrintError,
     this.onShared,
     this.scrollViewDecoration,
+    this.scrollPhysics,
     this.pdfPreviewPageDecoration,
     this.pdfFileName,
     this.useActions = true,
@@ -66,6 +67,7 @@ class PdfPreview extends StatefulWidget {
     this.actionBarTheme = const PdfActionBarTheme(),
     this.enableScrollToPage = false,
     this.onZoomChanged,
+    this.zoomOnDoubleTap = true
   }) : _pagesBuilder = null;
 
   /// Build a custom layout.
@@ -108,6 +110,7 @@ class PdfPreview extends StatefulWidget {
     this.onPrintError,
     this.onShared,
     this.scrollViewDecoration,
+    this.scrollPhysics,
     this.pdfPreviewPageDecoration,
     this.pdfFileName,
     this.useActions = true,
@@ -126,6 +129,7 @@ class PdfPreview extends StatefulWidget {
     required CustomPdfPagesBuilder pagesBuilder,
     this.enableScrollToPage = false,
     this.onZoomChanged,
+    this.zoomOnDoubleTap = true
   }) : _pagesBuilder = pagesBuilder;
 
   static const _defaultPageFormats = <String, PdfPageFormat>{
@@ -180,6 +184,9 @@ class PdfPreview extends StatefulWidget {
 
   /// Decoration of scrollView
   final Decoration? scrollViewDecoration;
+
+  /// Scroll physics for the scrollable part of the preview.
+  final ScrollPhysics? scrollPhysics;
 
   /// Decoration of PdfPreviewPage
   final Decoration? pdfPreviewPageDecoration;
@@ -240,6 +247,9 @@ class PdfPreview extends StatefulWidget {
 
   /// The zoom mode has changed
   final ValueChanged<bool>? onZoomChanged;
+
+  /// Whether to zoom on a single page when a page is double clicked.
+  final bool zoomOnDoubleTap;
 
   @override
   PdfPreviewState createState() => PdfPreviewState();
@@ -422,11 +432,13 @@ class PdfPreviewState extends State<PdfPreview> {
                   pdfPreviewPageDecoration: widget.pdfPreviewPageDecoration,
                   previewPageMargin: widget.previewPageMargin,
                   scrollViewDecoration: widget.scrollViewDecoration,
+                  scrollPhysics: widget.scrollPhysics,
                   shouldRepaint: widget.shouldRepaint,
                   pagesBuilder: widget._pagesBuilder,
                   dpi: widget.dpi,
                   enableScrollToPage: widget.enableScrollToPage,
                   onZoomChanged: widget.onZoomChanged,
+                  zoomOnDoubleTap: widget.zoomOnDoubleTap,
                 );
               },
             ),

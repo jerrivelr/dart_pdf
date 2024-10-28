@@ -55,6 +55,7 @@ class PdfPreviewCustom extends StatefulWidget {
     this.pagesBuilder,
     this.enableScrollToPage = false,
     this.onZoomChanged,
+    this.zoomOnDoubleTap = true
   });
 
   /// Pdf paper page format
@@ -113,12 +114,14 @@ class PdfPreviewCustom extends StatefulWidget {
   /// The zoom mode has changed
   final ValueChanged<bool>? onZoomChanged;
 
+  /// Whether to zoom on a single page when a page is double clicked.
+  final bool zoomOnDoubleTap;
+
   @override
   PdfPreviewCustomState createState() => PdfPreviewCustomState();
 }
 
-class PdfPreviewCustomState extends State<PdfPreviewCustom>
-    with PdfPreviewRaster {
+class PdfPreviewCustomState extends State<PdfPreviewCustom> with PdfPreviewRaster {
   final listView = GlobalKey();
 
   List<GlobalKey> _pageGlobalKeys = <GlobalKey>[];
@@ -227,13 +230,6 @@ class PdfPreviewCustomState extends State<PdfPreviewCustom>
       return _showError(_errorMessage);
     }
 
-    if (pages.isEmpty) {
-      return widget.loadingWidget ??
-          const Center(
-            child: CircularProgressIndicator(),
-          );
-    }
-
     if (widget.enableScrollToPage) {
       _pageGlobalKeys = List.generate(pages.length, (_) => GlobalKey());
     }
@@ -243,7 +239,7 @@ class PdfPreviewCustomState extends State<PdfPreviewCustom>
     }
 
     Widget pageWidget(int index, {Key? key}) => GestureDetector(
-          onDoubleTap: () {
+          onDoubleTap: (widget.zoomOnDoubleTap) ? () {
             setState(() {
               updatePosition = scrollController.position.pixels;
               preview = index;
@@ -251,7 +247,7 @@ class PdfPreviewCustomState extends State<PdfPreviewCustom>
               _updateCursor(SystemMouseCursors.grab);
             });
             _zoomChanged();
-          },
+          } : null,
           child: PdfPreviewPage(
             key: key,
             pageData: pages[index],
@@ -287,22 +283,19 @@ class PdfPreviewCustomState extends State<PdfPreviewCustom>
 
   Widget _zoomPreview() {
     final zoomPreview = GestureDetector(
-      onDoubleTap: () {
+      onDoubleTap: (widget.zoomOnDoubleTap) ? () {
         setState(() {
           preview = null;
           _updateCursor(MouseCursor.defer);
         });
         _zoomChanged();
-      },
-      onLongPressCancel:
-          kIsWeb ? () => _updateCursor(SystemMouseCursors.grab) : null,
-      onLongPressDown:
-          kIsWeb ? (_) => _updateCursor(SystemMouseCursors.grabbing) : null,
+      } : null,
+      onLongPressCancel: kIsWeb ? () => _updateCursor(SystemMouseCursors.grab) : null,
+      onLongPressDown: kIsWeb ? (_) => _updateCursor(SystemMouseCursors.grabbing) : null,
       child: InteractiveViewer(
         transformationController: transformationController,
         maxScale: 5,
-        onInteractionEnd:
-            kIsWeb ? (_) => _updateCursor(SystemMouseCursors.grab) : null,
+        onInteractionEnd: kIsWeb ? (_) => _updateCursor(SystemMouseCursors.grab) : null,
         child: Center(
           child: PdfPreviewPage(
             pageData: pages[preview!],
@@ -330,6 +323,10 @@ class PdfPreviewCustomState extends State<PdfPreviewCustom>
 
   @override
   Widget build(BuildContext context) {
+    if (pages.isEmpty) {
+      return widget.loadingWidget ?? const Center(child: CircularProgressIndicator());
+    }
+
     Widget page;
 
     if (preview != null) {
@@ -350,18 +347,20 @@ class PdfPreviewCustomState extends State<PdfPreviewCustom>
       }
     }
 
-    return Container(
-      decoration: widget.scrollViewDecoration ??
-          BoxDecoration(
-            gradient: LinearGradient(
-              colors: <Color>[Colors.grey.shade400, Colors.grey.shade200],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+    return InteractiveViewer(
+      child: Container(
+        decoration: widget.scrollViewDecoration ??
+            BoxDecoration(
+              gradient: LinearGradient(
+                colors: <Color>[Colors.grey.shade400, Colors.grey.shade200],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
-          ),
-      width: double.infinity,
-      alignment: Alignment.center,
-      child: page,
+        width: double.infinity,
+        alignment: Alignment.center,
+        child: page,
+      ),
     );
   }
 }
